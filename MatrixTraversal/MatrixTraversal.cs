@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -19,44 +20,50 @@ namespace MatrixTraversal
 
         public override void Run(IEnumerable<string> args)
         {
-            if(args.Count() < 2)
+            int nrows;
+            int ncols;
+            int[,] matrix;
+            var argArray = args.ToArray();
+            try
             {
-                Console.WriteLine("Invalid arguments: must specify matrix bounds");
-                return;
+                matrix = JsonConvert.DeserializeObject<int[,]>(string.Join("", argArray));
+                nrows = matrix.GetLength(0);
+                ncols = matrix.GetLength(1);
             }
-
-            var mSize = int.Parse(args.First());
-            var nSize = int.Parse(args.Skip(1).First());
-            if(mSize <= 0 || nSize <= 0)
+            catch
             {
-                Console.WriteLine("Invalid size specified: both sizes must be greater than 0.");
-                return;
-            }
-
-            var random = new Random();
-            var matrix = new int[mSize, nSize];
-            matrix[0, 0] = 0;
-            matrix[mSize - 1, nSize - 1] = 0;
-            Console.WriteLine($"Testing MatrixTraversal algorithms with the following matrix");
-            for(var m = 0; m < mSize; m++)
-            {
-                for (var n = 0; n < nSize; n++)
+                if (args.Count() < 2 || (nrows = Convert.ToInt32(argArray[0])) <= 0 || (ncols = Convert.ToInt32(argArray[1])) <= 0)
                 {
-                    if ((m == 0 && n == 0) || (m == mSize - 1 && n == nSize - 1))
-                    { 
-                        Console.Write($"\t{matrix[m, n]}");
-                        continue;
-                    }
+                    Console.WriteLine("Invalid arguments: must specify matrix with bounds greater than 0 or give a desired matrix");
+                    return;
+                }
 
-                    matrix[m, n] = random.Next(0, 6);
-                    if (matrix[m, n] == 0)
+                if (!(argArray.Length > 2 && int.TryParse(argArray[2], out var seed)))
+                {
+                    seed = Environment.TickCount;
+                }
+                var random = new Random(seed);
+                Console.WriteLine($"Using seed {seed}");
+
+                matrix = new int[nrows, ncols];
+                for (var r = 0; r < nrows; r++)
+                {
+                    for (var c = 0; c < ncols; c++)
                     {
-                        matrix[m, n] = -1;
+                        matrix[r, c] = (r == 0 && c == 0) || (r == nrows - 1 && c == ncols - 1) || (matrix[r, c] = random.Next(0, 6)) != 0 ? matrix[r, c] : -1;
                     }
-                    Console.Write($"\t{matrix[m, n]}");
+                }
+            }
+
+            Console.WriteLine($"Testing MatrixTraversal algorithms with the following matrix");
+            for (var r = 0; r < nrows; r++)
+            {
+                for (var c = 0; c < ncols; c++)
+                {
+                    Console.Write($"{matrix[r, c],3}");
                 }
                 Console.WriteLine();
-            }       
+            }
 
             Compose();
             var sw = new Stopwatch();
@@ -66,7 +73,7 @@ namespace MatrixTraversal
                 try
                 {
                     sw.Restart();
-                    result = q.Run(matrix, mSize, nSize);
+                    result = q.Run(matrix, nrows, ncols);
                     sw.Stop();
                 }
                 catch (Exception ex)
@@ -79,18 +86,17 @@ namespace MatrixTraversal
                 var total = 0;
                 if (result == null)
                 {
-                    answer = "no result possible";
+                    answer = "There is no solution";
                 }
                 else
                 {
-                    foreach(var r in result)
+                    foreach (var r in result)
                     {
                         answer += $"{r} ";
                         total += matrix[r.Item1, r.Item2];
                     }
                 }
-
-                Console.WriteLine($"{q.GetType().Name} (in {sw.ElapsedMilliseconds} ms) << {total}points \n\tPath: {answer}");
+                Console.WriteLine($"{q.GetType().Name} (in {sw.ElapsedMilliseconds} ms) << {total}points \n\t\tPath: {answer}");
             }
         }
     }
