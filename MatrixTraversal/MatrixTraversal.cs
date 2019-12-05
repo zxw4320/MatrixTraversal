@@ -67,6 +67,7 @@ namespace MatrixTraversal
                 {
                     sw.Restart();
                     result = q.Run(matrix, mSize, nSize);
+                    sw.Stop();
                 }
                 catch (Exception ex)
                 {
@@ -75,6 +76,7 @@ namespace MatrixTraversal
                 }
 
                 var answer = "";
+                var total = 0;
                 if (result == null)
                 {
                     answer = "no result possible";
@@ -84,10 +86,11 @@ namespace MatrixTraversal
                     foreach(var r in result)
                     {
                         answer += $"{r} ";
+                        total += matrix[r.Item1, r.Item2];
                     }
                 }
 
-                Console.WriteLine($"{q.GetType().Name} (in {sw.ElapsedMilliseconds} ms) << {answer}");
+                Console.WriteLine($"{q.GetType().Name} (in {sw.ElapsedMilliseconds} ms) << {total}points \n\tPath: {answer}");
             }
         }
     }

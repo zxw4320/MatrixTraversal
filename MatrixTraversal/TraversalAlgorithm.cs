@@ -7,7 +7,6 @@ namespace MatrixTraversal
     {
         public List<(int, int)> Run(int[,] matrix, int m, int n)
         {
-
             // create a matrix to store the best path to each given point
             var matrixResult = new Dictionary<int, Dictionary<int, (int, List<(int, int)>)>>();
             for (var i = 0; i < m; i++)
